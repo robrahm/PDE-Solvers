@@ -6,7 +6,7 @@ import numpy as np
 This is a wrapper for fipy FD solver.
 Solves u_t = alpha u_xx
 """
-def solve_heat(u0, alpha, dx, dt, t_end, L):
+def solve_heat(u0, alpha, dx, t_end, L, dt = -1, leftval = None, leftdx = None, rightval = None, rightdx = None):
     """
     Parameters
         u0      : initial value
@@ -14,6 +14,8 @@ def solve_heat(u0, alpha, dx, dt, t_end, L):
         dx, dt  : space and time steps
         t_end   : last time value
         L       : Length of the domain
+        dt      : can pass or it is calculed based on CFL
+        ___     : leftval, etc are boundary conditions
 
     Returns 
         T       : Time values
@@ -21,18 +23,23 @@ def solve_heat(u0, alpha, dx, dt, t_end, L):
     """
 
     mesh = Grid1D(dx = dx, nx = int(L / dx))
+    if dt == -1:
+        dt = .9 * (dx)**2 / (2*alpha)
     u = CellVariable(name="u", mesh=mesh, value=0.0)
     x = mesh.cellCenters[0].value
+    u.constrain(leftval, mesh.facesLeft)
+    u.constrain(rightval, mesh.facesRight)
+    eq = TransientTerm() == DiffusionTerm(coeff=alpha)
+
     u[:] = u0(x)
 
-    eq = TransientTerm() == DiffusionTerm(coeff=alpha)
+    
     t = 0.0
     T = [t]
     U = [u.value.copy()]
 
     while t < t_end:
-        #u.constrain(0.0, mesh.facesLeft)
-        #u.constrain(0.0, mesh.facesRight)
+        
         eq.solve(var=u, dt=dt)
         t += dt
         T.append(t)
