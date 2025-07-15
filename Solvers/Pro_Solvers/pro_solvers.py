@@ -21,14 +21,27 @@ def solve_heat(u0, alpha, dx, t_end, L, dt = -1, leftval = None, leftdx = None, 
         T       : Time values
         U       : Values of solution at time values
     """
-
+    
     mesh = Grid1D(dx = dx, nx = int(L / dx))
     if dt == -1:
         dt = .9 * (dx)**2 / (2*alpha)
     u = CellVariable(name="u", mesh=mesh, value=0.0)
     x = mesh.cellCenters[0].value
-    u.constrain(leftval, mesh.facesLeft)
-    u.constrain(rightval, mesh.facesRight)
+    """
+    If left and or right vals are given set those; if fluxes are give set those;
+    as you can see, flux has precedence. 
+    """
+    
+    if leftdx is not None:
+        u.faceGrad.constrain(leftdx, mesh.facesLeft)
+    elif leftval is not None:
+        u.constrain(leftval, mesh.facesLeft)   
+
+    if rightdx is not None:
+        u.faceGrad.constrain(rightdx, mesh.facesRight)
+    elif rightval is not None:
+        u.constrain(rightval, mesh.facesRight) 
+   
     eq = TransientTerm() == DiffusionTerm(coeff=alpha)
 
     u[:] = u0(x)
@@ -44,7 +57,5 @@ def solve_heat(u0, alpha, dx, t_end, L, dt = -1, leftval = None, leftdx = None, 
         t += dt
         T.append(t)
         U.append(u.value.copy())
-
-
 
     return np.array(T), np.array(U)
