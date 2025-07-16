@@ -29,6 +29,14 @@ def test_fd_1():
     assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
     assert(dx * np.abs(np.sum(U1[-1]) - np.sum(U[-1])) < dx * np.abs(np.sum(U[-1]) * tol)) 
 
+#This is dirichlet again, but tests for the case when no BCs are passed which defaults to DD BCs
+def test_fd_1_5():
+    T1, X1, U1 = fdm(u0, alpha, dx, t_end, L)
+    T, U = solve_heat(u0, alpha, dx, t_end, L, leftval = 0, rightval = 0)
+    assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
+    assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
+    assert(dx * np.abs(np.sum(U1[-1]) - np.sum(U[-1])) < dx * np.abs(np.sum(U[-1]) * tol)) 
+
 def test_fd_2():
     T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [1,0,0], rbc = [0,1,0])
     T, U = solve_heat(u0, alpha, dx, t_end, L, leftval = 0, rightdx = 0)

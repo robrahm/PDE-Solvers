@@ -1,4 +1,4 @@
-from fipy import CellVariable, Grid1D, TransientTerm, DiffusionTerm
+from fipy import CellVariable, Grid1D, TransientTerm, DiffusionTerm, ExplicitDiffusionTerm
 import numpy as np
 
 
