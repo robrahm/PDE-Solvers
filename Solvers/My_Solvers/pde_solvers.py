@@ -1,6 +1,6 @@
 from fipy import CellVariable, Grid1D, TransientTerm, DiffusionTerm
 import numpy as np
-
+from collections import deque
 
 
 """
@@ -43,7 +43,7 @@ def fdm(u0, alpha, dx, t_end, L, dt = None, lbc = None, rbc = None):
         cr = rbc[2]
 
     X = np.arange(0, L + dx, dx)
-    U = [u0(X)]
+    U = np.array([u0(X)])
     dt = dt if dt else .9 * (dx)**2 / (2*alpha)
     dtdx = dt/(dx**2) if dt else .9 / (2*alpha)
 
@@ -51,26 +51,32 @@ def fdm(u0, alpha, dx, t_end, L, dt = None, lbc = None, rbc = None):
     T = [t]
     while T[-1] <= t_end:
         T.append(T[-1] + dt)
-        u = [0]
-        k = 1
-        for x in X[1:-1]:
-            u.append(U[-1][k] + dtdx * alpha * (U[-1][k-1] + U[-1][k+1] - 2*U[-1][k]))
-            k += 1
-
+        #u = [0]
+        #k = 1
+        #for x in X[1:-1]:
+        #    u.append(U[-1][k] + dtdx * alpha * (U[-1][k-1] + U[-1][k+1] - 2*U[-1][k]))
+        #    k += 1
+        u = U[-1,1:-1] + dtdx * alpha * (U[-1,0:-2] + U[-1,2:] - 2*U[-1,1:-1])
         """
         The next part is boundary conditions.
         """
+
+    
         if bl == 0:
-            u[0] = cl / al
+            #u[0] = cl / al
+            u = np.insert(u, 0, cl / al)
         else:
-            gp = U[-1][1] - (2 * dx / bl) * (cl - al * U[-1][0])
-            u[0] = U[-1][0] + dtdx * alpha * (U[-1][1] - 2 * U[-1][0] + gp)
+            gp = U[-1,1] - (2 * dx / bl) * (cl - al * U[-1,0])
+            #u[0] = U[-1][0] + dtdx * alpha * (U[-1][1] - 2 * U[-1][0] + gp)
+            u = np.insert(u, 0, U[-1,0] + dtdx * alpha * (U[-1,1] - 2 * U[-1,0] + gp))
         if br == 0:
-            u.append(cr / ar)
+            u = np.append(u, cr / ar)
         else:
-            gp = U[-1][-2] + (2 * dx / br) * (cr - ar * U[-1][-1])
-            u.append(U[-1][-1] + dtdx * alpha * (gp - 2 * U[-1][-1] + U[-1][-2]))
-        U.append(u.copy())
+            gp = U[-1,-2] + (2 * dx / br) * (cr - ar * U[-1,-1])
+            u = np.append(u, U[-1][-1] + dtdx * alpha * (gp - 2 * U[-1][-1] + U[-1][-2]))
+            #np.concatenate((u, U[-1,-1] + dtdx * alpha * (gp - 2 * U[-1,-1] + U[-1,-2])))
+        U = np.vstack((U, u.copy()))
+        #U.append(u.copy())
 
     return np.array(T), np.array(X), np.array(U)
             

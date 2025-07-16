@@ -10,7 +10,7 @@ alpha = 2
 L = 1.0
 dx = 0.01
 dt = 0.0001
-t_end = 0.05
+t_end = 0.001
 N = 100
 C = np.random.rand(N)
 def u0(x):
@@ -28,8 +28,20 @@ def test_fd_1():
     assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
     assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
 
-def test_fd():
+def test_fd_2():
     T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [1,0,0], rbc = [0,1,0])
     T, U = solve_heat(u0, alpha, dx, t_end, L, leftval = 0, rightdx = 0)
+    assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
+    assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
+
+def test_fd_3():
+    T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [0,1,0], rbc = [0,1,0])
+    T, U = solve_heat(u0, alpha, dx, t_end, L, leftdx = 0, rightdx = 0)
+    assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
+    assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
+
+def test_fd_4():
+    T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [0,1,0], rbc = [1,0,0])
+    T, U = solve_heat(u0, alpha, dx, t_end, L, leftdx = 0, rightval = 0)
     assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
     assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
