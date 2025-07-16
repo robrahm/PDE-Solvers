@@ -27,21 +27,57 @@ def test_fd_1():
     T, U = solve_heat(u0, alpha, dx, t_end, L, leftval = 0, rightval = 0)
     assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
     assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
+    assert(dx * np.abs(np.sum(U1[-1]) - np.sum(U[-1])) < dx * np.abs(np.sum(U[-1]) * tol)) 
 
 def test_fd_2():
     T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [1,0,0], rbc = [0,1,0])
     T, U = solve_heat(u0, alpha, dx, t_end, L, leftval = 0, rightdx = 0)
     assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
     assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
+    assert(dx * np.abs(np.sum(U1[-1]) - np.sum(U[-1])) <  tol)
 
 def test_fd_3():
     T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [0,1,0], rbc = [0,1,0])
     T, U = solve_heat(u0, alpha, dx, t_end, L, leftdx = 0, rightdx = 0)
     assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
     assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
+    assert(dx * np.abs(np.sum(U1[-1]) - np.sum(U[-1])) < tol)
 
 def test_fd_4():
     T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [0,1,0], rbc = [1,0,0])
     T, U = solve_heat(u0, alpha, dx, t_end, L, leftdx = 0, rightval = 0)
     assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
     assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
+    assert(dx * np.abs(np.sum(U1[-1]) - np.sum(U[-1])) < tol)
+
+
+
+
+
+def test_fd_1_nh():
+    T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [1,0,0], rbc = [1,0,0], g = lambda x,t: (t**2)*np.cos(x))
+    T, U = solve_heat(u0, alpha, dx, t_end, L, leftval = 0, rightval = 0, g = lambda x,t: (t**2)*np.cos(x))
+    assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
+    assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
+    assert(dx * np.abs(np.sum(U1[-1]) - np.sum(U[-1])) <  tol)
+
+def test_fd_2_nh():
+    T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [1,0,0], rbc = [0,1,0], g = lambda x,t: (t**2)*np.cos(x))
+    T, U = solve_heat(u0, alpha, dx, t_end, L, leftval = 0, rightdx = 0, g = lambda x,t: (t**2)*np.cos(x))
+    assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
+    assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
+    assert(dx * np.abs(np.sum(U1[-1]) - np.sum(U[-1])) <  tol) 
+
+def test_fd_3_nh():
+    T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [0,1,0], rbc = [0,1,0], g = lambda x,t: (t**2)*np.cos(x))
+    T, U = solve_heat(u0, alpha, dx, t_end, L, leftdx = 0, rightdx = 0, g = lambda x,t: (t**2)*np.cos(x))
+    assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
+    assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
+    assert(dx * np.abs(np.sum(U1[-1]) - np.sum(U[-1])) <  tol)
+
+def test_fd_4_nh():
+    T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [0,1,0], rbc = [1,0,0], g = lambda x,t: (t**2)*np.cos(x))
+    T, U = solve_heat(u0, alpha, dx, t_end, L, leftdx = 0, rightval = 0, g = lambda x,t: (t**2)*np.cos(x))
+    assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
+    assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
+    assert(dx * np.abs(np.sum(U1[-1]) - np.sum(U[-1])) <  tol)

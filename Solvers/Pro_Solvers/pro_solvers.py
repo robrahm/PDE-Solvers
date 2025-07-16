@@ -6,7 +6,8 @@ import numpy as np
 This is a wrapper for fipy FD solver.
 Solves u_t = alpha u_xx
 """
-def solve_heat(u0, alpha, dx, t_end, L, dt = -1, leftval = None, leftdx = None, rightval = None, rightdx = None):
+def solve_heat(u0, alpha, dx, t_end, L, dt = -1, leftval = None, leftdx = None, rightval = None, rightdx = None, 
+               g = lambda x, t: 0):
     """
     Parameters
         u0      : initial value
@@ -42,7 +43,7 @@ def solve_heat(u0, alpha, dx, t_end, L, dt = -1, leftval = None, leftdx = None, 
     elif rightval is not None:
         u.constrain(rightval, mesh.facesRight) 
    
-    eq = TransientTerm() == DiffusionTerm(coeff=alpha)
+    
 
     u[:] = u0(x)
 
@@ -53,6 +54,8 @@ def solve_heat(u0, alpha, dx, t_end, L, dt = -1, leftval = None, leftdx = None, 
 
     while t < t_end:
         
+        f = CellVariable(mesh=mesh, value=g(mesh.cellCenters[0], t))
+        eq = TransientTerm() == DiffusionTerm(coeff=alpha) + f
         eq.solve(var=u, dt=dt)
         t += dt
         T.append(t)
