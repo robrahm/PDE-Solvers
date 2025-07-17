@@ -53,7 +53,12 @@ def fdm(u0, alpha, dx, t_end, L, dt = None, lbc = None, rbc = None, g = lambda x
         """
         if lbc and lbc[1]:
             gp = U[-1,1] - (2 * dx / lbc[1]) * (lbc[2] - lbc[0] * U[-1,0])
-            u = np.insert(u, 0, U[-1,0] + dtdx * alpha * (U[-1,1] - 2 * U[-1,0] + gp))
+            al = .5 * (a(X[0]) + a(X[1]))
+            ar = .5 * (a(X[0] + a(-dx)))
+            ul = U[-1,1] - U[-1,0]
+            ur = U[-1,0] - gp
+            u = np.insert(u, 0,U[-1,0] + dtdx * (al * ul - ar * ur))
+            #u = np.insert(u, 0, U[-1,0] + dtdx * alpha * (U[-1,1] - 2 * U[-1,0] + gp))
         else:
             u = np.insert(u, 0, lbc[2] / lbc[1] if (lbc and lbc[2] and lbc[0]) else 0)
 
