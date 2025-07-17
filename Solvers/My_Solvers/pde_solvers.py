@@ -58,9 +58,9 @@ def fdm(u0, alpha, dx, t_end, L, dt = None, lbc = None, rbc = None, g = lambda x
             ul = U[-1,1] - U[-1,0]
             ur = U[-1,0] - gp
             u = np.insert(u, 0,U[-1,0] + dtdx * (al * ul - ar * ur))
-            #u = np.insert(u, 0, U[-1,0] + dtdx * alpha * (U[-1,1] - 2 * U[-1,0] + gp))
+            #u = np.insert(u, 0, U[-1,0] + dtdx * 2 * (U[-1,1] - 2 * U[-1,0] + gp))
         else:
-            u = np.insert(u, 0, lbc[2] / lbc[1] if (lbc and lbc[2] and lbc[0]) else 0)
+            u = np.insert(u, 0, lbc[2] / lbc[0] if (lbc and lbc[2] and lbc[0]) else 0)
 
         
         if rbc and rbc[1]:
@@ -68,7 +68,7 @@ def fdm(u0, alpha, dx, t_end, L, dt = None, lbc = None, rbc = None, g = lambda x
             u = np.append(u, U[-1][-1] + dtdx * alpha * (gp - 2 * U[-1][-1] + U[-1][-2]))
 
         else: 
-            u = np.append(u, rbc[2] / rbc[1] if (rbc and rbc[2] and rbc[0]) else 0)
+            u = np.append(u, rbc[2] / rbc[0] if (rbc and rbc[2] and rbc[0]) else 0)
             
         U = np.vstack((U, u.copy()))
 
