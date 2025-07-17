@@ -25,15 +25,29 @@ def fdm(u0, alpha, dx, t_end, L, dt = None, lbc = None, rbc = None, g = lambda x
     """
     
     X = np.arange(0, L + dx, dx)
+    if not callable(alpha):
+        a = lambda x: alpha
+    else:
+        a = alpha
     U = np.array([u0(X)])
-    dt = dt if dt else .9 * (dx)**2 / (2*alpha)
-    dtdx = dt/(dx**2) if dt else .9 / (2*alpha)
+    dt = dt if dt else .9 * (dx)**2 / (2*np.max(a(X)))
+    dtdx = dt/(dx**2) if dt else .9 / (2*np.max(a(X)))
+
+    
 
     t = 0.0 
     T = [t]
     while T[-1] <= t_end:
         T.append(T[-1] + dt)
-        u = U[-1,1:-1] + dtdx * alpha * (U[-1,0:-2] + U[-1,2:] - 2*U[-1,1:-1]) + dt * g(X[1:-1], T[-1])
+
+        al = .5 * (a(X[2:]) + a(X[1:-1]))
+        ar = .5 * (a(X[0:-2]) + a(X[1:-1]))
+        Ul = U[-1,2:] - U[-1,1:-1]
+        Ur = U[-1,1:-1] - U[-1, 0:-2] 
+        u = U[-1,1:-1] + dtdx * (al * Ul - ar * Ur)
+
+        #u = U[-1,1:-1] + dtdx * a(X[1:-1]) * (U[-1,0:-2] + U[-1,2:] - 2*U[-1,1:-1]) + dt * g(X[1:-1], T[-1])
+        #u += dtdx * (a(X[2:]) - a(X[0:-2])) * (U[-1,2:] - U[-1,0:-2]) / 4
         """
         The next part is boundary conditions.
         """

@@ -6,7 +6,7 @@ import numpy as np
 This is a wrapper for fipy FD solver.
 Solves u_t = alpha u_xx
 """
-def solve_heat(u0, alpha, dx, t_end, L, dt = -1, leftval = None, leftdx = None, rightval = None, rightdx = None, 
+def solve_heat(u0, alpha, dx, t_end, L, dt = None, leftval = None, leftdx = None, rightval = None, rightdx = None, 
                g = lambda x, t: 0):
     """
     Parameters
@@ -22,12 +22,21 @@ def solve_heat(u0, alpha, dx, t_end, L, dt = -1, leftval = None, leftdx = None, 
         T       : Time values
         U       : Values of solution at time values
     """
+
+    X = np.arange(0, L + dx, dx)
+    if not callable(alpha):
+        a = lambda x: alpha
+    else:
+        a = alpha
     
     mesh = Grid1D(dx = dx, nx = int(L / dx))
-    if dt == -1:
-        dt = .9 * (dx)**2 / (2*alpha)
+    dt = dt if dt is not None else .9 * (dx)**2 / (2*np.max(a(X)))
+    #if dt == -1:
+    #    dt = .9 * (dx)**2 / (2*np.max(a(X)))
     u = CellVariable(name="u", mesh=mesh, value=0.0)
     x = mesh.cellCenters[0].value
+    ar = a(x)
+    ac = CellVariable(name="a", mesh=mesh, value = ar)
     """
     If left and or right vals are given set those; if fluxes are give set those;
     as you can see, flux has precedence. 
@@ -55,7 +64,7 @@ def solve_heat(u0, alpha, dx, t_end, L, dt = -1, leftval = None, leftdx = None, 
     while t < t_end:
         
         f = CellVariable(mesh=mesh, value=g(mesh.cellCenters[0], t))
-        eq = TransientTerm() == DiffusionTerm(coeff=alpha) + f
+        eq = TransientTerm() == DiffusionTerm(coeff=ac) + f
         eq.solve(var=u, dt=dt)
         t += dt
         T.append(t)
