@@ -60,6 +60,18 @@ def test_fd_2():
     assert(diff < 1e5 * tol) 
 
 def test_fd_3():
+    T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [0,1,1], rbc = [0,1,0])
+    T, U = solve_heat(u0, alpha, dx, t_end, L, leftdx = 1, rightdx = 0)
+    assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
+    assert(np.abs(U1[-1,0] - U[-1,0]) < tol)
+    X = np.arange(dx/2, L, dx)
+    inU = interp1d(X, U[-1], kind='cubic', fill_value = "extrapolate")
+    U = inU(X1)
+    diff = dx*np.sum((U1[-1] - U)**2)
+    assert(diff < 1e5 * tol) 
+
+
+def test_fd_3_5():
     T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [0,1,0], rbc = [0,1,0])
     T, U = solve_heat(u0, alpha, dx, t_end, L, leftdx = 0, rightdx = 0)
     assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
@@ -69,6 +81,7 @@ def test_fd_3():
     U = inU(X1)
     diff = dx*np.sum((U1[-1] - U)**2)
     assert(diff < 1e5 * tol) 
+
 
 def test_fd_4():
     T1, X1, U1 = fdm(u0, alpha, dx, t_end, L , lbc = [0,1,0], rbc = [1,0,0])
@@ -135,7 +148,7 @@ def test_fd_4_nh():
 Variable Diff
 """
 a = lambda x: x**2 + 2
-def test_fd_1_nh():
+def test_fd_1_vc():
     T1, X1, U1 = fdm(u0, a, dx, t_end, L , lbc = [1,0,0], rbc = [1,0,0])
     T, U = solve_heat(u0, a, dx, t_end, L, leftval = 0, rightval = 0)
     assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
@@ -149,7 +162,7 @@ def test_fd_1_nh():
 
 
 #This is dirichlet again, but tests for the case when no BCs are passed which defaults to DD BCs
-def test_fd_1_5_nh():
+def test_fd_1_5_vc():
     T1, X1, U1 = fdm(u0, a, dx, t_end, L)
     T, U = solve_heat(u0, a, dx, t_end, L, leftval = 0, rightval = 0)
     assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
@@ -160,7 +173,7 @@ def test_fd_1_5_nh():
     diff = dx*np.sum((U1[-1] - U)**2)
     assert(diff < 1e5 * tol) 
 
-def test_fd_2_nh():
+def test_fd_2_vc():
     T1, X1, U1 = fdm(u0, a, dx, t_end, L , lbc = [1,0,0], rbc = [0,1,0])
     T, U = solve_heat(u0, a, dx, t_end, L, leftval = 0, rightdx = 0)
     assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
@@ -171,7 +184,7 @@ def test_fd_2_nh():
     diff = dx*np.sum((U1[-1] - U)**2)
     assert(diff < 1e5 * tol) 
 
-def test_fd_3_nh():
+def test_fd_3_vc():
     T1, X1, U1 = fdm(u0, a, dx, t_end, L , lbc = [0,1,0], rbc = [0,1,0])
     T, U = solve_heat(u0, a, dx, t_end, L, leftdx = 0, rightdx = 0)
     assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)
@@ -182,7 +195,7 @@ def test_fd_3_nh():
     diff = dx*np.sum((U1[-1] - U)**2)
     assert(diff < 1e5 * tol) 
 
-def test_fd_4_nh():
+def test_fd_4_vc():
     T1, X1, U1 = fdm(u0, a, dx, t_end, L , lbc = [0,1,0], rbc = [1,0,0])
     T, U = solve_heat(u0, a, dx, t_end, L, leftdx = 0, rightval = 0)
     assert(np.abs(U1[-1,-1] - U[-1,-1]) <  tol)

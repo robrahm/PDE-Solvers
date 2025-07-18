@@ -1,4 +1,4 @@
-from fipy import CellVariable, Grid1D, TransientTerm, DiffusionTerm, ExplicitDiffusionTerm
+from fipy import CellVariable, Grid1D, TransientTerm, DiffusionTerm, ConvectionTerm, FaceVariable
 import numpy as np
 
 
@@ -6,7 +6,7 @@ import numpy as np
 This is a wrapper for fipy FD solver.
 Solves u_t = alpha u_xx
 """
-def solve_heat(u0, alpha, dx, t_end, L, dt = None, leftval = None, leftdx = None, rightval = None, rightdx = None, 
+def solve_heat(u0, alpha, dx, t_end, L, dt = None, convec = 0, leftval = None, leftdx = None, rightval = None, rightdx = None, 
                g = lambda x, t: 0):
     """
     Parameters
@@ -28,6 +28,11 @@ def solve_heat(u0, alpha, dx, t_end, L, dt = None, leftval = None, leftdx = None
         a = lambda x: alpha
     else:
         a = alpha
+
+    if not callable(convec):
+        c = lambda x: convec
+    else:
+        c = convec
     
     mesh = Grid1D(dx = dx, nx = int(L / dx))
     dt = dt if dt is not None else .9 * (dx)**2 / (2*np.max(a(X)))
@@ -52,11 +57,10 @@ def solve_heat(u0, alpha, dx, t_end, L, dt = None, leftval = None, leftdx = None
     elif rightval is not None:
         u.constrain(rightval, mesh.facesRight) 
    
-    
+    v_values = c(mesh.faceCenters[0])
+    v_vector = FaceVariable(mesh=mesh, rank=1, value=(v_values,))
 
     u[:] = u0(x)
-
-    
     t = 0.0
     T = [t]
     U = [u.value.copy()]
@@ -64,7 +68,8 @@ def solve_heat(u0, alpha, dx, t_end, L, dt = None, leftval = None, leftdx = None
     while t < t_end:
         
         f = CellVariable(mesh=mesh, value=g(mesh.cellCenters[0], t))
-        eq = TransientTerm() == DiffusionTerm(coeff=ac) + f
+        v_face = FaceVariable(mesh=mesh, value = c(mesh.faceCenters[0]))
+        eq = TransientTerm() == DiffusionTerm(coeff=ac) + ConvectionTerm(coeff=v_vector) + f
         eq.solve(var=u, dt=dt)
         t += dt
         T.append(t)

@@ -7,7 +7,7 @@ from collections import deque
 This is a wrapper for fipy FD solver.
 Solves u_t = alpha u_xx
 """
-def fdm(u0, alpha, dx, t_end, L, dt = None, lbc = None, rbc = None, g = lambda x, t: 0):
+def fdm(u0, alpha, dx, t_end, L, convec = 0, dt = None, lbc = None, rbc = None, g = lambda x, t: 0):
     """
     Parameters
         u0      : initial value
@@ -33,40 +33,48 @@ def fdm(u0, alpha, dx, t_end, L, dt = None, lbc = None, rbc = None, g = lambda x
     dt = dt if dt else .9 * (dx)**2 / (2*np.max(a(X)))
     dtdx = dt/(dx**2) if dt else .9 / (2*np.max(a(X)))
 
+    if not callable(convec):
+        c = lambda x: convec
+    else:
+        c = convec
+
     
 
     t = 0.0 
     T = [t]
     while T[-1] <= t_end:
         T.append(T[-1] + dt)
-
         al = .5 * (a(X[2:]) + a(X[1:-1]))
         ar = .5 * (a(X[0:-2]) + a(X[1:-1]))
         Ul = U[-1,2:] - U[-1,1:-1]
         Ur = U[-1,1:-1] - U[-1, 0:-2] 
-        u = U[-1,1:-1] + dtdx * (al * Ul - ar * Ur)
+        u = U[-1,1:-1] + dtdx * (al * Ul - ar * Ur) + dt * (c(X[2:]) * U[-1,2:] - c(X[0:-2]) * U[-1, 0:-2]) / (2 * dx)
+        #ut = np.insert(u, 0, 0)
+        #ut = np.append(ut, 0)
+        #u += dt * (c(X[2:]) * ut[2:] - c(X[0:-2]) * ut[0:-2]) / (2 * dx)
+        
 
-        #u = U[-1,1:-1] + dtdx * a(X[1:-1]) * (U[-1,0:-2] + U[-1,2:] - 2*U[-1,1:-1]) + dt * g(X[1:-1], T[-1])
-        #u += dtdx * (a(X[2:]) - a(X[0:-2])) * (U[-1,2:] - U[-1,0:-2]) / 4
         """
         The next part is boundary conditions.
         """
         if lbc and lbc[1]:
             gp = U[-1,1] - (2 * dx / lbc[1]) * (lbc[2] - lbc[0] * U[-1,0])
             al = .5 * (a(X[0]) + a(X[1]))
-            ar = .5 * (a(X[0] + a(-dx)))
+            ar = .5 * (a(X[0]) + a(-dx))
             ul = U[-1,1] - U[-1,0]
             ur = U[-1,0] - gp
-            u = np.insert(u, 0,U[-1,0] + dtdx * (al * ul - ar * ur))
-            #u = np.insert(u, 0, U[-1,0] + dtdx * 2 * (U[-1,1] - 2 * U[-1,0] + gp))
+            u = np.insert(u, 0, U[-1,0] + dtdx * (al * ul - ar * ur))
         else:
             u = np.insert(u, 0, lbc[2] / lbc[0] if (lbc and lbc[2] and lbc[0]) else 0)
 
         
         if rbc and rbc[1]:
             gp = U[-1,-2] + (2 * dx / rbc[1]) * (rbc[2] - rbc[0] * U[-1,-1])
-            u = np.append(u, U[-1][-1] + dtdx * alpha * (gp - 2 * U[-1][-1] + U[-1][-2]))
-
+            al = .5 * (a(X[-1]) + a(L + dx))
+            ar = .5 * (a(X[-1]) + a(X[-2]))
+            ul = gp - U[-1,-1]
+            ur = U[-1,-1] - U[-1,-2]
+            u = np.append(u, U[-1,-1] + dtdx * (al * ul - ar * ur))
         else: 
             u = np.append(u, rbc[2] / rbc[0] if (rbc and rbc[2] and rbc[0]) else 0)
             
