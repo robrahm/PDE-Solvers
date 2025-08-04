@@ -1,5 +1,54 @@
-from fipy import CellVariable, Grid1D, TransientTerm, DiffusionTerm, ConvectionTerm, FaceVariable
+from fipy import CellVariable, Grid1D, Grid2D, TransientTerm, DiffusionTerm, ConvectionTerm, FaceVariable, Viewer
 import numpy as np
+
+"""
+This is a wrapper for fipy FD solver for 2 dim diffusion equation
+Solves u_t = alpha u_xx
+"""
+def solve_heat2d(u0, alpha, dx, dy, t_end, Lx, Ly, dt = None):
+    """
+    Parameters
+        u0      : initial value
+        alpha   : diffusion coefficient
+        d_      : space and time steps
+        t_end   : last time value
+        Lx,Ly   : Length of the domain
+        dt      : can pass or it is calculed based on CFL
+
+    Returns 
+        T       : Time values
+        U       : Values of solution at time values
+    """
+    mesh = Grid2D(dx = dx, nx = int(Lx / dx), dy = dy, ny = int(Ly / dy))
+
+    dt = dt if dt is not None else .9 * min(dx**2, dy**2) / (2*np.max(alpha))
+    u = CellVariable(name = "u", mesh = mesh, value = 0.0)
+    x = mesh.cellCenters[0].value
+    y = mesh.cellCenters[1].value
+    u.setValue(u0(x,y))
+
+    #u.constrain(0.0, mesh.facesLeft)
+    #u.constrain(0.0, mesh.facesRight)
+    #u.constrain(0.0, mesh.facesBottom)
+    #u.constrain(0.0, mesh.facesTop)
+
+    eq = TransientTerm() == DiffusionTerm(coeff = alpha)
+
+    viewer = Viewer(u, title = "PDE Solution", figsize = (8,6))
+
+    t = 0.0 
+    T = [t]
+    while t < t_end: 
+        eq.solve(var = u, dt = dt)
+        t += dt
+        T.append(t)
+
+    viewer = Viewer(u, title = "PDE Solution", figsize = (8,6))
+
+    return np.array(T), np.array(u.value.reshape((int(Ly / dy), int(Lx / dx))))
+
+
+
 
 
 """
