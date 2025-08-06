@@ -1,6 +1,45 @@
 from fipy import CellVariable, Grid1D, Grid2D, TransientTerm, DiffusionTerm, ConvectionTerm, FaceVariable, Viewer
 import numpy as np
 
+
+
+"""
+This does diffusion on image; this is basic isotropic diffusion
+"""
+def image_diff(img, alpha, t_end):
+    """
+    Parameters
+        image   : image to be processes
+        alpha   : ediffusion coefficient
+        t_end   : last time value
+
+    Returns 
+        T       : Time values
+        U       : Processed Image
+    """
+
+    nx, ny = img.shape
+
+    # Make FiPy mesh
+    dx = dy = 1.0
+    mesh = Grid2D(dx=dx, dy=dy, nx=nx, ny=ny)
+
+    # Initialize u with image
+    u = CellVariable(mesh=mesh, name="u", value=0.0)
+    u.setValue(img.ravel())
+    dt = .9 * min(dx**2, dy**2) / (2*np.max(alpha))
+    eq = TransientTerm() == DiffusionTerm(coeff = alpha)
+
+    t = 0.0
+    while t < t_end: 
+        print(t)
+        eq.solve(var = u, dt = dt)
+        t += dt
+
+
+    return np.array(u.value.reshape((nx, ny)))
+
+
 """
 This is a wrapper for fipy FD solver for 2 dim diffusion equation
 Solves u_t = alpha u_xx
@@ -27,14 +66,14 @@ def solve_heat2d(u0, alpha, dx, dy, t_end, Lx, Ly, dt = None):
     y = mesh.cellCenters[1].value
     u.setValue(u0(x,y))
 
-    #u.constrain(0.0, mesh.facesLeft)
-    #u.constrain(0.0, mesh.facesRight)
-    #u.constrain(0.0, mesh.facesBottom)
-    #u.constrain(0.0, mesh.facesTop)
+    u.constrain(0.0, mesh.facesLeft)
+    u.constrain(0.0, mesh.facesRight)
+    u.constrain(0.0, mesh.facesBottom)
+    u.constrain(0.0, mesh.facesTop)
 
     eq = TransientTerm() == DiffusionTerm(coeff = alpha)
 
-    viewer = Viewer(u, title = "PDE Solution", figsize = (8,6))
+    #viewer = Viewer(u, title = "PDE Solution", figsize = (8,6))
 
     t = 0.0 
     T = [t]
@@ -43,9 +82,10 @@ def solve_heat2d(u0, alpha, dx, dy, t_end, Lx, Ly, dt = None):
         t += dt
         T.append(t)
 
-    viewer = Viewer(u, title = "PDE Solution", figsize = (8,6))
+    #viewer = Viewer(u, title = "PDE Solution", figsize = (8,6))
 
-    return np.array(T), np.array(u.value.reshape((int(Ly / dy), int(Lx / dx))))
+    return np.array(mesh.cellCenters[0]), np.array(mesh.cellCenters[1]),\
+          np.array(u.value.reshape((int(Ly / dy), int(Lx / dx))))
 
 
 
