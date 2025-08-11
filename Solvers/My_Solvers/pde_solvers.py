@@ -171,6 +171,8 @@ def fdm(u0, alpha, dx, t_end, L, convec = 0, dt = None, lbc = None, rbc = None, 
         T       : Time values
         U       : Values of solution at time values
     """
+
+    
     
     X = np.arange(0, L + dx, dx)
     if not callable(alpha):
