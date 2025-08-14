@@ -1,6 +1,74 @@
 from fipy import CellVariable, Grid1D, TransientTerm, DiffusionTerm
+from My_Solvers.haar import create_haar_2d
 import numpy as np
 from collections import deque
+
+"""
+This does anisotropic image diffusion but with haar coefficents 
+as the "gradient" 
+"""
+def image_diff_an_haar(img, c = None, K = 1, l = 1, t_end = 10):
+    """
+    Parameters
+        img     : image to be processes; must be 2^N x 2^N in size. 
+        c       : the "perona malik" function
+        K       : the parameter in the function
+        t_end   : last time value
+
+    Returns 
+        U       : processed image
+    """
+    A, H, Coeff, W = create_haar_2d(img)
+
+    c = c if c else lambda x, K: 1 / (1 + x**2/K**2)
+    dx = dy = 1.0
+    U0 = img
+    U = np.zeros(U0.shape)
+    U[1:-1, 1:-1] = U0[1:-1, 1:-1]
+    t = 0
+    dt = 2 * (1/dx**2 + 1/dy**2)
+    dt = 1 / dt
+    dtdx = dt 
+    dtdy = dt 
+    num_steps = 0
+    while t < Coeff.shape[0]:
+        num_steps += 1
+        gradU = np.zeros(U.shape)
+        gradU[1:-1, 1:-1] = .5 * (U[2:, 1:-1] - U[0:-2, 1:-1])**2 + .5 * (U[1:-1, 2:] - U[1:-1, 0:-2])**2
+        C = c(Coeff[t], K)
+        K = .9 * (1/512**2) * np.sum(np.abs(C))
+        dt = .9 / (4 * np.max(C))
+        ar = .5 * (C[2:, 1:-1] + C[1:-1, 1:-1])
+        al = .5 * (C[0:-2, 1:-1] + C[1:-1, 1:-1])
+        au = .5 * (C[1:-1, 2:] + C[1:-1, 1:-1])
+        ad = .5 * (C[1:-1, 0:-2] + C[1:-1, 1:-1])
+        Ul = U[0:-2, 1:-1] - U[1:-1, 1:-1]
+        Ur = U[2:, 1:-1] - U[1:-1, 1:-1]
+        Uu = U[1:-1, 2:] - U[1:-1, 1:-1]
+        Ud = U[1:-1, 0:-2] - U[1:-1, 1:-1]
+        dUx = l * (al * Ul + ar * Ur) + (1 - l) * C[1:-1, 1:-1] * (Ul + Ur)
+        dUy = l * (au * Uu + ad * Ud) + (1 - l) *C[1:-1, 1:-1] * (Uu + Ud)
+        U[1:-1 , 1:-1] = U[1:-1, 1:-1] +  dtdx * dUx + dtdy * dUy 
+
+        U[0, 1:-1] = U[1, 1:-1]
+        U[-1, 1:-1] = U[-2, 1:-1]
+        U[1:-1, 0] = U[1:-1, 1]
+        U[1:-1, -1] = U[1:-1, -2]
+        U[0,0] = .5 * (U[1, 0] + U[0,1])
+        U[-1, 0] = .5 * (U[-2,0] + U[-1,1])
+        U[0,-1] = .5 * (U[0, -2] + U[1, -1])
+        U[-1, -1] = .5 * (U[-1, -2] + U[-2, -1])
+
+        t += 1
+        
+    print(f"num steps ={num_steps}")
+    return A, H, C, W, U
+
+
+    
+
+
+
 
 """
 Basic anisotropic image diffusion 

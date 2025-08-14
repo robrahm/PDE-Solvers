@@ -48,7 +48,7 @@ def create_haar(Y):
     
     return A, H, C
 
-def create_haar_2d(Y):
+def create_haar_2d(Z):
     """
     Parameters: 
     Y:      The values of the function on smallest scale (i.e. 
@@ -61,11 +61,38 @@ def create_haar_2d(Y):
             size bigger than the smallest interval. Summing over the columns
             of H gives a vector Z that approximates f on the interval. 
     C:      Matrix of (absolute value of) haar coeeficients 
+    W:      This is sum<f,h_Q>h_Q. So if you graph (X, Y, Z) you should get 
+            the graph of the function on which Z is based.
     """
-    N = int(log2(Y.shape[0]))
+    N = int(log2(Z.shape[0]))
     A = np.zeros((N + 1, 2**N, 2**N))
-    A[0] = Y
+    A[0] = Z
 
-    return A
+    t = 1
+    while t <= N:
+        scale = 2**t
+        r = 0
+        while r * scale <= N:
+            c = 0
+            while c * scale <= N:
+                tl = A[t - 1, r * scale, c * scale]
+                tr = A[t - 1, r * scale, (c + 1) * scale - 1]
+                bl = A[t - 1, (r + 1) * scale - 1, c * scale]
+                br = A[t - 1, (r + 1) * scale - 1, (c + 1) * scale - 1]
+                A[t, r * scale : (r + 1) * scale, c * scale : (c + 1) * scale] = .25 * (tl + tr + bl + br)
+
+                c += 1
+            r += 1
+        t += 1
+    H = A[:-1] - A[1:]
+    c = 1/2**np.linspace(N - 1, 0, N, endpoint = True).reshape(N, 1, 1)
+    C = c * H
+
+    W = A[-1].copy()
+    t = 0
+    while t < N:
+        W += H[t]
+        t += 1
+    return A, H, C, W
 
     
