@@ -35,7 +35,10 @@ def image_diff_an_haar(img, c = None, K = 1, l = 1, t_end = 10):
         num_steps += 1
         gradU = np.zeros(U.shape)
         gradU[1:-1, 1:-1] = .5 * (U[2:, 1:-1] - U[0:-2, 1:-1])**2 + .5 * (U[1:-1, 2:] - U[1:-1, 0:-2])**2
+        D = c(gradU, K)
         C = c(Coeff[t], K)
+        print(f"grad is {D[85, 75]} and haar is {C[85,75]} ratio is \
+              {D[85,75] / C[85,75]}")
         K = .9 * (1/512**2) * np.sum(np.abs(C))
         dt = .9 / (4 * np.max(C))
         ar = .5 * (C[2:, 1:-1] + C[1:-1, 1:-1])
@@ -59,10 +62,12 @@ def image_diff_an_haar(img, c = None, K = 1, l = 1, t_end = 10):
         U[0,-1] = .5 * (U[0, -2] + U[1, -1])
         U[-1, -1] = .5 * (U[-1, -2] + U[-2, -1])
 
+        dtdx /= 2
+        dtdy /= 2
         t += 1
         
     print(f"num steps ={num_steps}")
-    return A, H, C, W, U
+    return A, H, Coeff, W, U
 
 
     

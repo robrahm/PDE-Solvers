@@ -85,7 +85,7 @@ def create_haar_2d(Z):
             r += 1
         t += 1
     H = A[:-1] - A[1:]
-    c = 1/2**np.linspace(N - 1, 0, N, endpoint = True).reshape(N, 1, 1)
+    c = np.sqrt(1/2**np.linspace(N - 1, 0, N, endpoint = True).reshape(N, 1, 1))
     C = c * H
 
     W = A[-1].copy()
